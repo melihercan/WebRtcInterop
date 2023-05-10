@@ -17,6 +17,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3    
     
+    - name: Show directory
+      run: dir
+    
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.1  
       with:
@@ -51,10 +54,12 @@ jobs:
         cd src
         git checkout branch-heads/5481
         gclient sync
+        xcopy /E /I d:\WebRtcInterop .
         (Get-Content BUILD.gn).replace('rtc_static_library', 'rtc_shared_library') | Set-Content BUILD.gn
         (Get-Content BUILD.gn) -notmatch 'complete_static_lib' | Set-Content BUILD.gn
         (Get-Content webrtc.gni).replace('!build_with_chromium && is_component_build', 'false') | Set-Content webrtc.gni
         (Get-Content rtc_tools\BUILD.gn) -notmatch ':frame_analyzer' | Set-Content rtc_tools\BUILD.gn
+        (Get-Content BUILD.gn).replace('deps = [ ":webrtc" ]', 'deps = [ ":webrtc","//WebRtcInterop" ]') | Set-Content BUILD.gn
         gn gen out/Default --args="is_debug=false is_component_build=true rtc_enable_symbol_export=true rtc_include_tests=false rtc_build_tools=false rtc_build_examples=false"
         autoninja -C out/Default
         
