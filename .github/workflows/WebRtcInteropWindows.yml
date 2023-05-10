@@ -1,0 +1,68 @@
+name: WebRtcInteropWindows
+
+on: workflow_dispatch
+
+env:
+  DEPOT_TOOLS_WIN_TOOLCHAIN: 0
+  GYP_GENERATORS: msvs-ninja,ninja
+  GYP_MSVS_OVERRIDE_PATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
+  vs2022_install: C:\Program Files\Microsoft Visual Studio\2022\Enterprise
+  GYP_MSVS_VERSION: 2022
+  PYTHON_BIN_ABSDIR: C:\hostedtoolcache\windows\Python\3.9.13\x64
+  
+jobs:
+  build:
+    runs-on: windows-latest
+     
+    steps:
+    - uses: actions/checkout@v3    
+    
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.1  
+      with:
+        msbuild-architecture: x64
+    
+    - name: Create 'depot_tools' folder
+      run: |
+        mkdir c:\depot_tools
+        cd c:\depot_tools
+        Invoke-WebRequest -Uri "https://storage.googleapis.com/chrome-infra/depot_tools.zip" -OutFile .\depot_tools.zip
+        7z x -y depot_tools.zip
+        del depot_tools.zip
+    - name: Export 'depot_tools' path
+      run: Add-Content $env:GITHUB_PATH c:\depot_tools
+    - name: Execute 'gclient'
+      run: gclient
+    
+    - name: Configure Git
+      run: |
+        git config --global user.name "melihercan"
+        git config --global user.email "melihercan@gmail.com"
+        git config --global core.autocrlf false
+        git config --global core.filemode false
+        git config --global branch.autosetuprebase always
+        
+    - name: Get the code, patch and build
+      run: |
+        mkdir c:\WebRtcInterop-checkout
+        cd c:\WebRtcInterop-checkout
+        fetch --nohooks webrtc
+        gclient sync
+        cd src
+        git checkout branch-heads/5481
+        gclient sync
+        (Get-Content BUILD.gn).replace('rtc_static_library', 'rtc_shared_library') | Set-Content BUILD.gn
+        (Get-Content BUILD.gn) -notmatch 'complete_static_lib' | Set-Content BUILD.gn
+        (Get-Content webrtc.gni).replace('!build_with_chromium && is_component_build', 'false') | Set-Content webrtc.gni
+        (Get-Content rtc_tools\BUILD.gn) -notmatch ':frame_analyzer' | Set-Content rtc_tools\BUILD.gn
+        gn gen out/Default --args="is_debug=false is_component_build=true rtc_enable_symbol_export=true rtc_include_tests=false rtc_build_tools=false rtc_build_examples=false"
+        autoninja -C out/Default
+        
+    - name: Copy WebRtcInterop library
+      run: |
+        copy c:\WebRtcInterop-checkout\src\out\Default\WebRtcInterop.dll .
+        
+    - uses: actions/upload-artifact@v3
+      with: 
+        name: Windows WebRTC interop library (WebRtcInterop.dll)
+        path: .\WebRtcInterop.dll
