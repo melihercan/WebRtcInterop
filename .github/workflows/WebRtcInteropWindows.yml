@@ -52,7 +52,7 @@ jobs:
         cd src
         git checkout branch-heads/5481
         gclient sync
-        xcopy /E /I D:\a\WebRtcInterop\WebRtcInterop WebRtcInterop
+        xcopy /E /I d:\a\WebRtcInterop\WebRtcInterop c:\WebRtcInterop-checkout\src\WebRtcInterop
         (Get-Content BUILD.gn).replace('rtc_static_library', 'rtc_shared_library') | Set-Content BUILD.gn
         (Get-Content BUILD.gn) -notmatch 'complete_static_lib' | Set-Content BUILD.gn
         (Get-Content webrtc.gni).replace('!build_with_chromium && is_component_build', 'false') | Set-Content webrtc.gni
