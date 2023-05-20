@@ -37,6 +37,7 @@ rtc_shared_library("WebRtcInterop") {
     defines += [
       "LIB_WEBRTC_API_EXPORTS",
       "WEBRTC_WIN",
+      "WEBRTC_LIBRARY_IMPL",
     ]
   }
 
