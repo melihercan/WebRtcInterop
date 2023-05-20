@@ -1,28 +1,33 @@
+#include "api/create_peerconnection_factory.h"
 #include "api/peer_connection_interface.h"
 #include "Interop.h"
 
-extern "C" RTC_EXPORT webrtc::PeerConnectionFactoryInterface*
+extern "C" RTC_EXPORT rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>*
+//webrtc::PeerConnectionFactoryInterface*
 CallCreatePeerConnectionFactory(
     rtc::Thread* network_thread,
     rtc::Thread* worker_thread,
     rtc::Thread* signaling_thread,
-    webrtc::AudioDeviceModule* default_adm,
-    webrtc::AudioEncoderFactory* audio_encoder_factory,
-    webrtc::AudioDecoderFactory* audio_decoder_factory,
-    webrtc::VideoEncoderFactory* video_encoder_factory,
-    webrtc::VideoDecoderFactory* video_decoder_factory,
-    webrtc::AudioMixer* audio_mixer,
-    webrtc::AudioProcessing* audio_processing,
+    rtc::scoped_refptr<webrtc::AudioDeviceModule>* default_adm,
+    rtc::scoped_refptr<webrtc::AudioEncoderFactory>* audio_encoder_factory,
+    rtc::scoped_refptr<webrtc::AudioDecoderFactory>* audio_decoder_factory,
+    std::unique_ptr<webrtc::VideoEncoderFactory>* video_encoder_factory,
+    std::unique_ptr<webrtc::VideoDecoderFactory>* video_decoder_factory,
+    rtc::scoped_refptr<webrtc::AudioMixer>* audio_mixer,
+    rtc::scoped_refptr<webrtc::AudioProcessing>* audio_processing,
     webrtc::AudioFrameProcessor* audio_frame_processor = nullptr,
-    webrtc::FieldTrialsView* field_trials = nullptr) 
+    std::unique_ptr<webrtc::FieldTrialsView>* field_trials = nullptr) 
 {
-  //auto x = webrtc::CreatePeerConnectionFactory(
-  //    network_thread, worker_thread, signaling_thread, default_adm,
-  //    audio_encoder_factory, audio_decoder_factory, video_encoder_factory,
-  //    video_decoder_factory, audio_mixer, audio_processing,
-  //    audio_frame_processor, field_trials);
-
-  return NULL;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-temporary" 
+  return &webrtc::CreatePeerConnectionFactory(
+      network_thread, worker_thread, signaling_thread, *default_adm,
+      *audio_encoder_factory, *audio_decoder_factory,
+      nullptr,  //*video_encoder_factory,
+      nullptr,  //*video_decoder_factory,
+      *audio_mixer, *audio_processing, audio_frame_processor,
+      nullptr);  //*field_trials);
+#pragma GCC diagnostic pop
 }
 
 
