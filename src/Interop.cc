@@ -5,50 +5,33 @@
 #include "api/peer_connection_interface.h"
 #include "Interop.h"
 
+extern "C" RTC_EXPORT webrtc::AudioEncoderFactory*
+CreateBuiltinAudioEncoderFactory() {
+  auto srp = webrtc::CreateBuiltinAudioEncoderFactory();
+  auto p = (webrtc::AudioEncoderFactory*)&srp;
+  return p;
+}
+
 extern "C" RTC_EXPORT webrtc::VideoEncoderFactory* 
 CreateBuiltinVideoEncoderFactory() 
 {
-  std::unique_ptr<webrtc::VideoEncoderFactory> up = webrtc::CreateBuiltinVideoEncoderFactory();
-  return up.release();
+  auto up = webrtc::CreateBuiltinVideoEncoderFactory();
+  auto p = up.release();
+  return p;
 }
 
 extern "C" RTC_EXPORT webrtc::VideoDecoderFactory*
-CreateBuiltinVideoDecoderFactory() {
+CreateBuiltinVideoDecoderFactory() 
+{
   auto up = webrtc::CreateBuiltinVideoDecoderFactory();
-
-  //auto a = (webrtc::VideoDecoderFactory*)&up;
-  //auto b = ((std::unique_ptr<webrtc::VideoEncoderFactory>*)(a));
-
-  // Unique pointer to raw pointer and return.
-  auto rp = up.release();
-  return rp;
+  auto p = up.release();
+  return p;
 
   //// Raw pointer to unique pointer.
   ////auto x = std::unique_ptr<webrtc::VideoDecoderFactory>{rp} 
 
 }
 
-
-extern "C" RTC_EXPORT webrtc::AudioEncoderFactory*
-CreateBuiltinAudioEncoderFactory() 
-{
-  auto srp = webrtc::CreateBuiltinAudioEncoderFactory();
-
-  auto a = (webrtc::AudioEncoderFactory*)&srp;
-  return a;
-  
-  ////auto b = (rtc::scoped_refptr<webrtc::AudioEncoderFactory>)a;
-
-
-
-
-  //// TODO: HOW TO CONVERT scoped_refptr to raw and back????
-
-  //auto x = srp.get();
-  //auto rp = srp.release();
-  //return rp;
-
-}
 
 
 //extern "C" RTC_EXPORT rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>*
